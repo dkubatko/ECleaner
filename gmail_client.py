@@ -1,10 +1,8 @@
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
-from monitor import Monitor
+from monitor import Monitor, monitored
 import multiprocessing as mp
-
-# TODO: Add request pool
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/gmail.modify'
@@ -17,8 +15,6 @@ class GmailClient:
             flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
             self.creds = tools.run_flow(flow, store)
         self.service = build('gmail', 'v1', http=self.creds.authorize(Http()))
-
-        self.monitor = Monitor()
     
     def build_query(self, q_from, q_to, q_unread):
         '''
@@ -47,8 +43,8 @@ class GmailClient:
         results = self.service.users().messages().list(userId='me', q=q, pageToken=token).execute()
         return results
 
-    # Monitored TODO: add decorator
-    def get_messages(self, frm=[], to=[], unrd=False):
+    @monitored(['count'])
+    def get_messages(self, frm=[], to=[], unrd=False, monitor=None):
         messages = []
         # Build query string
         q = self.build_query(frm, to, unrd)
@@ -57,13 +53,12 @@ class GmailClient:
         messages.extend(results.get('messages', []))
 
         # Make requests until all messages retrieved
-        count = len(results.get('messages', []))
-        self.monitor.add('count', count, True)
-
+        
+        count = monitor.upd('count', len(results.get('messages', [])))
         while results.get('nextPageToken') is not None:
             results = self._batch_get_messages(q, results['nextPageToken'])
             messages.extend(results.get('messages', []))
-            count = self.monitor.set('count', count + len(results.get('messages', [])))
+            count = monitor.upd('count', count + len(results.get('messages', [])))
 
         return {'messages': messages, 'count': count}
 
@@ -83,23 +78,21 @@ class GmailClient:
         for i in range(0, len(l), n):
             yield l[i:i + n]
 
-    # Monitored TODO: add decorator
     # Threaded TODO: add decorator
-    def mark_read(self, ids, num_threads = 1):
+    @monitored(['success'])
+    def mark_read(self, ids, num_threads = 1, monitor=None):
         '''
         Marks every message in the list of ids as read
         :param ids: list of message ids
         '''
-        self.monitor.add('success', 0, monitor=True)
         total = len(ids)
         # Split ids into chunks of size |threads|
         groups = list(self._chunks(ids, num_threads))
         
         # Thread callback func
         def read_callback(result):
-            success = 0
             if result:
-                self.monitor.inc('success')
+                monitor.inc('success')
 
         for group in groups:
             pool = mp.Pool(num_threads)
@@ -110,8 +103,8 @@ class GmailClient:
             # Join all read threads
             pool.join()
 
-        return {'success': self.monitor.get('success'), 'total': total}
-    
+        return {'success': monitor.get('success'), 'total': total}
+
     def get_message(self, id):
         results = self.service.users().messages().get(userId='me', id=id).execute()
         return {'labels': results['labelIds'], 'snippet': results['snippet']}
@@ -123,9 +116,6 @@ if __name__ == '__main__':
     # pp(gmc.get_messages(['boris, vladimir'], ['me'], False))
     print("Starting unread messages retrieval:")
     msgs = gmc.get_messages(unrd=True)
-    print("\nDone")
     print("Marking as read:")
     ids = [m['id'] for m in msgs['messages']]
-    gmc.mark_read(ids, num_threads=5)
-    print("\nDone")
-    
+    gmc.mark_read(ids, num_threads=10)
