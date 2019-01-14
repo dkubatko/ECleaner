@@ -118,4 +118,4 @@ if __name__ == '__main__':
     msgs = gmc.get_messages(unrd=True)
     print("Marking as read:")
     ids = [m['id'] for m in msgs['messages']]
-    gmc.mark_read(ids, num_threads=10)
+    gmc.mark_read(ids, num_threads=50)
