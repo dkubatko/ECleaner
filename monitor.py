@@ -46,7 +46,6 @@ class monitored(object):
         # Add each variable to the monitor
         self.monitor = Monitor()
         list(map(self.monitor.add, args))
-        print(self.monitor.vars)
 
     def __call__(self, f):
         """
@@ -54,7 +53,6 @@ class monitored(object):
         once, as part of the decoration process! You can only give
         it a single argument, which is the function object.
         """
-        print("Inside __call__()")
         def wrapped_f(*args, **kwargs):
             monitor = self.monitor
             result = f(*args, monitor=monitor, **kwargs)

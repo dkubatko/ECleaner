@@ -29,7 +29,7 @@ end
 # unset irrelevant variables
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/drazzzer/Projects/Python/ECleaner/eclnenv"
+set -gx VIRTUAL_ENV "/home/dkubatko/Projects/ECleaner/eclnenv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
