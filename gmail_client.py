@@ -1,4 +1,5 @@
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from httplib2 import Http
 from oauth2client import file, client, tools
 from monitor import Monitor, monitored
@@ -23,7 +24,6 @@ class GmailClient:
         :param q_to: list of email addresses
         :param q_unread: True/False only unread messages
         '''
-        # TODO: move to constants
         s_from = list(map(lambda e: f'from:{e}', q_from))
         s_from = '{' + ' '.join(s_from) + '}'
 
@@ -43,7 +43,7 @@ class GmailClient:
         results = self.service.users().messages().list(userId='me', q=q, pageToken=token).execute()
         return results
 
-    @monitored(['count'])
+    @monitored('Fetch mail', ['count'])
     def get_messages(self, frm=[], to=[], unrd=False, monitor=None):
         messages = []
         # Build query string
@@ -62,24 +62,27 @@ class GmailClient:
 
         return {'messages': messages, 'count': count}
 
-    # Threaded TODO: add decorator
     def _mark_one_read(self, id):
-        #TODO: move to constants
         body = {
             'addLabelIds': [],
             'removeLabelIds': ['UNREAD']
         }
-        result = self.service.users().messages().modify(userId='me', 
-            id=id, body=body).execute(http=self.creds.authorize(Http()))
-        return True if result else False
+
+        try:
+            result = self.service.users().messages().modify(userId='me', 
+                id=id, body=body).execute(http=self.creds.authorize(Http()))
+        except HttpError as e:
+            return (id, False)
+
+
+        return (id, True) if result else (id, False)
 
     def _chunks(self, l, n):
         """Helper function to yield successive n-sized chunks from l."""
         for i in range(0, len(l), n):
             yield l[i:i + n]
 
-    # Threaded TODO: add decorator
-    @monitored(['success'])
+    @monitored('Mark as unread', ['success', 'failure'])
     def mark_read(self, ids, num_threads = 1, monitor=None):
         '''
         Marks every message in the list of ids as read
@@ -88,20 +91,14 @@ class GmailClient:
         total = len(ids)
         # Split ids into chunks of size |threads|
         groups = list(self._chunks(ids, num_threads))
-        
-        # Thread callback func
-        def read_callback(result):
-            if result:
-                monitor.inc('success')
 
         for group in groups:
-            pool = mp.Pool(num_threads)
-            for _id in group:
-                pool.apply_async(self._mark_one_read, 
-                        args=(_id, ), callback=read_callback)
-            pool.close()
-            # Join all read threads
-            pool.join()
+            with mp.Pool(num_threads) as pool:
+                for (id, result) in pool.map(self._mark_one_read, group):
+                    if result:
+                        monitor.inc('success')
+                    else:
+                        monitor.inc('failure')
 
         return {'success': monitor.get('success'), 'total': total}
 
@@ -113,9 +110,8 @@ from pprint import pprint as pp
 
 if __name__ == '__main__':
     gmc = GmailClient()
-    # pp(gmc.get_messages(['boris, vladimir'], ['me'], False))
     print("Starting unread messages retrieval:")
     msgs = gmc.get_messages(unrd=True)
     print("Marking as read:")
     ids = [m['id'] for m in msgs['messages']]
-    gmc.mark_read(ids, num_threads=50)
+    gmc.mark_read(ids, num_threads=30)

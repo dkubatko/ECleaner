@@ -1,9 +1,10 @@
 class Monitor():
     '''
-    Remote storage class to monitor and maintain variables
+    Remote storage class to monitor and maintain tracked variables
     '''
-    def __init__(self):
+    def __init__(self, task_name: str):
         self.vars = {}
+        self.task_name = task_name
     
     def add(self, var, val=0, monitor=True):
         self.vars[var] = {'val': val, 'monitor': monitor}
@@ -35,16 +36,16 @@ class Monitor():
         # Convert to display format
         s_vrs = ', '.join(vrs)
         s_vals = ', '.join(vals)
-        print(f'\r[{s_vrs}] progress: |{s_vals}|', end = '\r')
+        print(f'\r<{self.task_name}>: [{s_vrs}] progress: |{s_vals}|', end = '\r')
 
 class monitored(object):
-    def __init__(self, args):
+    def __init__(self, task_name: str, args: list):
         """
         Set up monitored variables
         """
-        print(f"Setting monitor for {args}")
+        print(f"<{task_name}>: setting monitor for {args}")
         # Add each variable to the monitor
-        self.monitor = Monitor()
+        self.monitor = Monitor(task_name)
         list(map(self.monitor.add, args))
 
     def __call__(self, f):
