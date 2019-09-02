@@ -1,0 +1,35 @@
+{
+  "name": "ECleaner",
+  "version": "1.0.0",
+  "description": "Gmail inbox cleaner",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dkubatko/ECleaner.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dkubatko/ECleaner/issues"
+  },
+  "homepage": "https://github.com/dkubatko/ECleaner#readme",
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.6",
+    "jsx-loader": "^0.12.2",
+    "webpack": "^4.39.3",
+    "webpack-cli": "^3.3.7",
+    "webpack-glob": "^2.0.2"
+  },
+  "dependencies": {
+    "package.json": "^2.0.1",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0"
+  }
+}
