@@ -1,3 +1,4 @@
-venv:
+env:
+	@sudo -s
 	@echo "Activating virtual env"
-	@. eclnenv/bin/activate
+	@source venv/bin/activate
