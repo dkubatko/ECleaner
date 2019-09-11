@@ -111,4 +111,4 @@ token.json
 *.code-workspace
 
 # node
-node-modules
+node_modules
