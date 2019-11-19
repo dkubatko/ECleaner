@@ -18,13 +18,18 @@
   },
   "homepage": "https://github.com/dkubatko/ECleaner#readme",
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
+    "@babel/core": "^7.6.0",
+    "@babel/preset-env": "^7.6.0",
     "@babel/preset-react": "^7.0.0",
     "babel-loader": "^8.0.6",
+    "babel-preset-react": "^6.24.1",
+    "css-loader": "^3.2.0",
     "jsx-loader": "^0.12.2",
-    "webpack": "^4.39.3",
-    "webpack-cli": "^3.3.7",
+    "node-sass": "^4.12.0",
+    "sass-loader": "^8.0.0",
+    "style-loader": "^1.0.0",
+    "webpack": "^4.40.2",
+    "webpack-cli": "^3.3.8",
     "webpack-glob": "^2.0.2"
   },
   "dependencies": {

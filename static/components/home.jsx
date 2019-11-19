@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 
 export function HomePage(props) {
-  const [loggedIn, setLoggedIn] = useState(true);
-  // const loggedIn = true;
+  const [cleaned, setCleaned] = useState(false);
+
+  const onCleanEmail = () => {
+    fetch("/clean")
+      .then(res => res.json())
+      .then((result) => {
+        console.log(result);
+      })
+  }
   return (
-    <div>
-      You are { loggedIn ? 'logged in' : 'not logged in'}<br/>
-      Value passed: {props.value}
-    </div>
+    <button onClick={onCleanEmail}>{ cleaned ? "Cleaned!" : "Let's do it!"}</button>
   );
 }
 
